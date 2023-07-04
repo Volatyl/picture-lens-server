@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
+from flask import request, session
+from flask_restful import Resource
 
-from flask import jsonify, make_response
-
-from models import db, User, Image, Category
-
-from config import app
+from config import app, db, api
+from models import User, Image, Category
 
 
 if __name__ == '__main__':
