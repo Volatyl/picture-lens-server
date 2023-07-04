@@ -1,12 +1,7 @@
-from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import MetaData
+from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy_serializer import SerializerMixin
-metadata = MetaData(naming_convention={
-    "fk": "fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s",
-})
 
-
-db = SQLAlchemy(metadata=metadata)
+from config import db, bcrypt
 
 
 class User(db.Model, SerializerMixin):
@@ -14,10 +9,25 @@ class User(db.Model, SerializerMixin):
     id = db.Column(db.Integer, primary_key=True)
     first_name = db.Column(db.String)
     last_name = db.Column(db.String)
-    password = db.Column(db.String)
-    images= db.relationship('Image' ,backref = db.backref('users'))
+    username = db.Column(db.String)
+    _password_hash = db.Column(db.String)
 
+    images = db.relationship('Image', backref=db.backref('users'))
+
+    @hybrid_property
+    def password_hash(self):
+        return self._password_hash
+
+    @password_hash.setter
+    def password_hash(self, password):
+        password_hash = bcrypt.generate_password_hash(password.encode('utf-8'))
+        self._password_hash = password_hash.decode('utf-8')
+
+    def authenticate(self, password):
+        return bcrypt.check_password_hash(self._password_hash, password.encode('utf-8'))
     
+    def __repr__(self):
+        return f'User {self.username}, ID: {self.id}'
 
 
 class Image(db.Model, SerializerMixin):
@@ -29,10 +39,8 @@ class Image(db.Model, SerializerMixin):
     likes = db.Column(db.Integer)
     created_at = db.Column(db.DateTime, server_default=db.func.now())
     updated_at = db.Column(db.DateTime, onupdate=db.func.now())
-    user_id = db.Column(db.Integer,db.ForeignKey('user.id'))
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     categories = db.relationship('Category', backref='image')
-    
-    
 
 
 class Category(db.Model, SerializerMixin):
@@ -40,11 +48,5 @@ class Category(db.Model, SerializerMixin):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String)
     image_id = db.Column(db.Integer, db.ForeignKey('images.id'))
-    user_id = db.Column(db.Integer,db.ForeignKey('user.id'))    
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     images = db.relationship('Image', backref=db.backref('categories'))
-
-
-
-
-
-
