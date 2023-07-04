@@ -15,6 +15,8 @@ class User(db.Model, SerializerMixin):
     first_name = db.Column(db.String)
     last_name = db.Column(db.String)
     password = db.Column(db.String)
+    images= db.relationship('Image' ,backref = db.backref('users'))
+
     
 
 
@@ -27,9 +29,10 @@ class Image(db.Model, SerializerMixin):
     likes = db.Column(db.Integer)
     created_at = db.Column(db.DateTime, server_default=db.func.now())
     updated_at = db.Column(db.DateTime, onupdate=db.func.now())
-    categories = db.relationship('Category', back_populates='image')
     user_id = db.Column(db.Integer,db.ForeignKey('user.id'))
-    users= db.relationship('Users' ,backref = db.backref('images'))
+    categories = db.relationship('Category', backref='image')
+    
+    
 
 
 class Category(db.Model, SerializerMixin):
