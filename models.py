@@ -40,9 +40,7 @@ class Category(db.Model, SerializerMixin):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String)
     image_id = db.Column(db.Integer, db.ForeignKey('images.id'))
-    user_id = db.Column(db.Integer,db.ForeignKey('user.id'))
-
-    
+    user_id = db.Column(db.Integer,db.ForeignKey('user.id'))    
     images = db.relationship('Image', backref=db.backref('categories'))
 
 
