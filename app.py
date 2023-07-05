@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from flask import request, session
+from flask import request, session, jsonify
 from flask_restful import Resource
 
 from config import app, db, api
@@ -10,7 +10,7 @@ class Index(Resource):
     def get(self):
         images = [img.to_dict() for img in Image.query.all()]
 
-        return images, 200
+        return jsonify(images), 200
 
 
 class Signup(Resource):
