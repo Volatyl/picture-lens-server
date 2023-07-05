@@ -6,13 +6,16 @@ from config import db, bcrypt
 
 class User(db.Model, SerializerMixin):
     __tablename__ = 'users'
+
+    serialize_rules = ('-images.user', ('-comments.user'))
+
     id = db.Column(db.Integer, primary_key=True)
-    first_name = db.Column(db.String)
-    last_name = db.Column(db.String)
+    email = db.Column(db.String)
     username = db.Column(db.String)
     _password_hash = db.Column(db.String)
 
-    images = db.relationship('Image', db.backref('users'))
+    images = db.relationship('Image', backref=db.backref('user'))
+    comments = db.relationship('Comment', backref=db.backref('user'))
 
     @hybrid_property
     def password_hash(self):
@@ -40,6 +43,9 @@ image_category = db.Table(
 class Image(db.Model, SerializerMixin):
 
     __tablename__ = 'images'
+
+    serialize_rules = ('-comments.image','-categories.images',)
+
     id = db.Column(db.Integer, primary_key=True)
     url = db.Column(db.String)
     price = db.Column(db.Integer)
@@ -49,8 +55,13 @@ class Image(db.Model, SerializerMixin):
 
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
 
+    comments = db.relationship('Comment', backref=db.backref('image'))
+
     categories = db.relationship(
-        'Category', secondary=image_category, backref='images')
+        'Category', secondary=image_category, backref=db.backref('images'))
+
+    def __repr__(self):
+        return f'User {self.user_id}, Price: {self.price}'
 
 
 class Category(db.Model, SerializerMixin):
@@ -60,3 +71,16 @@ class Category(db.Model, SerializerMixin):
 
     def __repr__(self):
         return self.name
+
+
+class Comment(db.Model, SerializerMixin):
+
+    __tablename__ = 'comments'
+
+    id = db.Column(db.Integer, primary_key=True)
+    comment = db.Column(db.String)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    image_id = db.Column(db.Integer, db.ForeignKey('images.id'))
+
+    def __repr__(self):
+        return f'Comment: {self.comment}'
