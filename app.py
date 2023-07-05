@@ -10,7 +10,7 @@ class Index(Resource):
     def get(self):
         images = [img.to_dict() for img in Image.query.all()]
 
-        return {'images': "works"}, 200
+        return images, 200
 
 
 class Signup(Resource):
@@ -62,20 +62,35 @@ class Logout(Resource):
         return {}, 204
 
 
-class Edit(Resource):
+class AddImage(Resource):
     def post(self):
         data = request.get_json()
         image = Image(**data)
+
         db.session.add(image)
         db.session.commit()
-        
-        return image
 
-    def patch(self):
-        pass
+        return image.to_dict(), 201
 
-    def delete(self):
-        pass
+
+class EditImg(Resource):
+    def patch(self, id):
+        image = Image.query.filter_by(id=id).first()
+
+        for key, value in request.json.items():
+            setattr(image, key, value)
+
+        db.session.commit()
+
+        return image.to_dict(), 200
+
+    def delete(self, id):
+        image = Image.query.filter_by(id=id).first()
+
+        db.session.delete(image)
+        db.session.commit()
+
+        return {"Deleted": True}, 204
 
 
 api.add_resource(Index, '/index')
@@ -83,7 +98,8 @@ api.add_resource(Signup, '/signup')
 api.add_resource(Login, '/login')
 api.add_resource(CheckSession, '/check_session')
 api.add_resource(Logout, '/logout')
-api.add_resource(Edit, '/edit')
+api.add_resource(AddImage, '/add_image')
+api.add_resource(EditImg, '/edit_image/<int:id>')
 
 if __name__ == '__main__':
     app.run(debug=True, port=5555)

@@ -54,6 +54,9 @@ class Image(db.Model, SerializerMixin):
 
     categories = db.relationship(
         'Category', secondary=image_category, backref=db.backref('images'))
+    
+    def __repr__(self):
+        return f'User {self.user_id}, Price: {self.price}'
 
 
 class Category(db.Model, SerializerMixin):
