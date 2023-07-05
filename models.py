@@ -6,10 +6,9 @@ from config import db, bcrypt
 
 class User(db.Model, SerializerMixin):
     __tablename__ = 'users'
-    
-    serialize_rules = ('-images.users',) 
-    
-    
+
+    serialize_rules = ('-images.users',)
+
     id = db.Column(db.Integer, primary_key=True)
     first_name = db.Column(db.String)
     last_name = db.Column(db.String)
@@ -54,7 +53,7 @@ class Image(db.Model, SerializerMixin):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
 
     categories = db.relationship(
-        'Category', secondary=image_category, backref='images')
+        'Category', secondary=image_category, backref=db.backref('images'))
 
 
 class Category(db.Model, SerializerMixin):
