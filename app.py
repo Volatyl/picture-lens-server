@@ -10,7 +10,7 @@ class Index(Resource):
     def get(self):
         images = [img.to_dict() for img in Image.query.all()]
 
-        return images, 200
+        return {'images': "works"}, 200
 
 
 class Signup(Resource):
@@ -64,7 +64,12 @@ class Logout(Resource):
 
 class Edit(Resource):
     def post(self):
-        pass
+        data = request.get_json()
+        image = Image(**data)
+        db.session.add(image)
+        db.session.commit()
+        
+        return image
 
     def patch(self):
         pass
@@ -74,6 +79,7 @@ class Edit(Resource):
 
 
 api.add_resource(Index, '/index')
+api.add_resource(Signup, '/signup')
 api.add_resource(Login, '/login')
 api.add_resource(CheckSession, '/check_session')
 api.add_resource(Logout, '/logout')

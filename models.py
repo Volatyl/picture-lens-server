@@ -6,13 +6,17 @@ from config import db, bcrypt
 
 class User(db.Model, SerializerMixin):
     __tablename__ = 'users'
+    
+    serialize_rules = ('-images.users',) 
+    
+    
     id = db.Column(db.Integer, primary_key=True)
     first_name = db.Column(db.String)
     last_name = db.Column(db.String)
     username = db.Column(db.String)
     _password_hash = db.Column(db.String)
 
-    images = db.relationship('Image', db.backref('users'))
+    images = db.relationship('Image', backref=db.backref('users'))
 
     @hybrid_property
     def password_hash(self):
