@@ -11,6 +11,7 @@ from models import User, Image, Category, Comment
 CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}})
 
 
+
 class ImagesResource(Resource):
     def get(self):
         images = [img.to_dict() for img in Image.query.all()]
@@ -65,15 +66,34 @@ class Logout(Resource):
         return {}, 204
 
 
+
 class AddImage(Resource):
     def post(self):
         data = request.get_json()
-        image = Image(**data)
+
+        # Extract the image data
+        image_data = {
+            'url': data.get('url'),
+            'price': data.get('price'),
+            'likes': data.get('likes'),
+            'user_id': data.get('user_id')
+        }
+        image = Image(**image_data)
+
+        
+        category_data = {
+            'name': data.get('category')
+        }
+        category = Category(**category_data)
+
+        
+        image.categories.append(category)
 
         db.session.add(image)
         db.session.commit()
 
         return image.to_dict(), 201
+
 
 
 class EditImg(Resource):
@@ -135,3 +155,4 @@ api.add_resource(CommentsUD, '/comment_edit/<int:id>')
 
 if __name__ == '__main__':
     app.run(debug=True, port=5555)
+
