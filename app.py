@@ -63,6 +63,15 @@ class ImagesResource(Resource):
         result = image_schema.dump(images, many=True)
         return result, 200
 
+class ImageResource(Resource):
+    def get(self, image_id):
+        image = Image.query.get(image_id)
+        if image:
+            result = image_schema.dump(image)
+            return result, 200
+        else:
+            return "Image not found", 404
+
 
 class CategoriesResource(Resource):
     def get(self):
@@ -189,6 +198,7 @@ class CommentsUD(Resource):
         return {'delete': True}, 200
 
 api.add_resource(ImagesResource, '/images')
+api.add_resource(ImageResource, '/images/<int:image_id>')
 api.add_resource(Signup, '/signup')
 api.add_resource(Login, '/login')
 api.add_resource(CheckSession, '/check_session')
