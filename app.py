@@ -63,6 +63,15 @@ class ImagesResource(Resource):
         result = image_schema.dump(images, many=True)
         return result, 200
 
+
+class CategoriesResource(Resource):
+    def get(self):
+        categories = Category.query.all()
+        category_schema = CategorySchema(many=True)
+        result = category_schema.dump(categories)
+        return result, 200
+    
+
 class Signup(Resource):
     def post(self):
         json = request.get_json()
@@ -188,6 +197,8 @@ api.add_resource(AddImage, '/add_image')
 api.add_resource(EditImg, '/edit_image/<int:id>')
 api.add_resource(CommentResource, '/comment')
 api.add_resource(CommentsUD, '/comment_edit/<int:id>')
+api.add_resource(CategoriesResource, '/categories')
+
 
 if __name__ == '__main__':
     app.run(debug=True, port=5555)
