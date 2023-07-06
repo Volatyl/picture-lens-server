@@ -2,6 +2,8 @@
 from flask import request, session
 from flask_restful import Resource
 from flask_cors import CORS
+from flask_marshmallow import Marshmallow
+from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
 
 
 from config import app, db, api
@@ -10,25 +12,34 @@ from models import User, Image, Category, Comment
 # CORS(app)
 CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}})
 
+# serialization schemas
+
+
+class ImageSchema(SQLAlchemyAutoSchema):
+    class Meta:
+        model = Image
+        load_instance = True
+
 
 class ImagesResource(Resource):
     def get(self):
         images = Image.query.all()
+        result = image_schema.dump
 
-        imgs = []
-        for img in images:
-            img_dict = {
-                "id": img.id,
-                "url": img.url,
-                "price": img.price,
-                "likes": img.likes,
-                "created_at": str(img.created_at),
-                "updated_at": str(img.updated_at),
-                "comments": [com.commentText for com in img.comments],
-                "categories": [cat.commentText for cat in img.categories]
-            }
+        # imgs = []
+        # for img in images:
+        #     img_dict = {
+        #         "id": img.id,
+        #         "url": img.url,
+        #         "price": img.price,
+        #         "likes": img.likes,
+        #         "created_at": str(img.created_at),
+        #         "updated_at": str(img.updated_at),
+        #         "comments": [com.commentText for com in img.comments],
+        #         "categories": [cat.commentText for cat in img.categories]
+        #     }
 
-            imgs.append(img_dict)
+        #     imgs.append(img_dict)
 
         return imgs, 200
 
