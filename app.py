@@ -88,7 +88,7 @@ class AddImage(Resource):
         db.session.add(image)
         db.session.commit()
 
-        return image.to_dict(), 201
+        return image.url, 201
 
 
 class EditImg(Resource):
