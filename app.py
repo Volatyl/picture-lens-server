@@ -13,9 +13,24 @@ CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}})
 
 class ImagesResource(Resource):
     def get(self):
-        images = [img.to_dict() for img in Image.query.all()]
+        images = Image.query.all()
 
-        return images, 200
+        imgs = []
+        for img in images:
+            img_dict = {
+                "id": img.id,
+                "url": img.url,
+                "price": img.price,
+                "likes": img.likes,
+                "created_at": str(img.created_at),
+                "updated_at": str(img.updated_at),
+                "comments": [com.commentText for com in img.comments],
+                "categories": [cat.commentText for cat in img.categories]
+            }
+
+            imgs.append(img_dict)
+
+        return imgs, 200
 
 
 class Signup(Resource):

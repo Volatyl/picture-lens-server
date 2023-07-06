@@ -40,11 +40,9 @@ image_category = db.Table(
     db.Column('category_id', db.Integer, db.ForeignKey('categories.id'), primary_key=True))
 
 
-class Image(db.Model, SerializerMixin):
+class Image(db.Model):
 
     __tablename__ = 'images'
-
-    # serialize_rules = ('-comments.image', '-categories.images',)
 
     id = db.Column(db.Integer, primary_key=True)
     url = db.Column(db.String)
@@ -55,7 +53,7 @@ class Image(db.Model, SerializerMixin):
 
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
 
-    # comments = db.relationship('Comment', backref='image')
+    comments = db.relationship('Comment', backref='image')
 
     categories = db.relationship(
         'Category', secondary=image_category, backref=db.backref('images'))
@@ -73,11 +71,9 @@ class Category(db.Model, SerializerMixin):
         return self.name
 
 
-class Comment(db.Model, SerializerMixin):
+class Comment(db.Model):
 
     __tablename__ = 'comments'
-
-    serialize_rules = ('-image.comments',)
 
     id = db.Column(db.Integer, primary_key=True)
     commentText = db.Column(db.String)
