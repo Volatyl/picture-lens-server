@@ -164,13 +164,17 @@ class EditImg(Resource):
         result = image_schema.dump(image)
         return result, 200
 
+class DeleteImg(Resource):
     def delete(self, id):
         image = Image.query.get(id)
 
-        db.session.delete(image)
-        db.session.commit()
+        if image:
+            db.session.delete(image)
+            db.session.commit()
+            return {"Deleted": True}, 204
+        else:
+            return {"Error": "Image not found"}, 404
 
-        return {"Deleted": True}, 204
 
 class CommentResource(Resource):
     def post(self):
@@ -205,6 +209,7 @@ api.add_resource(CheckSession, '/check_session')
 api.add_resource(Logout, '/logout')
 api.add_resource(AddImage, '/add_image')
 api.add_resource(EditImg, '/edit_image/<int:id>')
+api.add_resource(DeleteImg, '/images/<int:id>')
 api.add_resource(CommentResource, '/comment')
 api.add_resource(CommentsUD, '/comment_edit/<int:id>')
 api.add_resource(CategoriesResource, '/categories')
