@@ -1,46 +1,85 @@
-#!/usr/bin/env python3
+
+#!/usr/bin/env python3#!/usr/bin/env python3
 from flask import request, session
 from flask_restful import Resource
 from flask_cors import CORS
 from flask_marshmallow import Marshmallow
-from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
 from marshmallow import fields
-
 
 from config import app, db, api
 from models import User, Image, Category, Comment
 
+# Initialize Marshmallow
+ma = Marshmallow(app)
+
 # CORS(app)
 CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}})
 
-# serialization schemas
+# Schemas
+class UserSchema(ma.Schema):
+    class Meta:
+        model = User
 
+    id = fields.Field()
+    email = fields.Field()
+    username = fields.Field()
 
-class ImageSchema(SQLAlchemyAutoSchema):
-    comments = fields.Nested('CommentSchema', many=True)
-
+class ImageSchema(ma.Schema):
     class Meta:
         model = Image
-        load_instance = True
 
+    id = fields.Field()
+    url = fields.Field()
+    price = fields.Field()
+    likes = fields.Field()
+    user_id = fields.Field()
 
-class CommentSchema(SQLAlchemyAutoSchema):
+class CategorySchema(ma.Schema):
+    class Meta:
+        model = Category
+
+    id = fields.Field()
+    name = fields.Field()
+
+class CommentSchema(ma.Schema):
     class Meta:
         model = Comment
-        load_instance = True
 
+    id = fields.Field()
+    commentText = fields.Field()
+    user_id = fields.Field()
+    image_id = fields.Field()
 
+user_schema = UserSchema()
 image_schema = ImageSchema()
+category_schema = CategorySchema()
 comment_schema = CommentSchema()
+
 
 
 class ImagesResource(Resource):
     def get(self):
         images = Image.query.all()
-        imgs = image_schema.dump(images, many=True)
+        result = image_schema.dump(images, many=True)
+        return result, 200
 
-        return imgs, 200
+class ImageResource(Resource):
+    def get(self, image_id):
+        image = Image.query.get(image_id)
+        if image:
+            result = image_schema.dump(image)
+            return result, 200
+        else:
+            return "Image not found", 404
 
+
+class CategoriesResource(Resource):
+    def get(self):
+        categories = Category.query.all()
+        category_schema = CategorySchema(many=True)
+        result = category_schema.dump(categories)
+        return result, 200
+    
 
 class Signup(Resource):
     def post(self):
@@ -54,18 +93,18 @@ class Signup(Resource):
         db.session.commit()
 
         session['user_id'] = user.id
-        return user.to_dict(), 201
-
+        result = user_schema.dump(user)
+        return result, 201
 
 class CheckSession(Resource):
-    def get():
+    def get(self):
         if 'user_id' in session:
             user_id = session['user_id']
-            user = User.query.filter_by(id=user_id).first()
-            return user.to_dict(), 200
+            user = User.query.get(user_id)
+            result = user_schema.dump(user)
+            return result, 200
 
         return {}, 204
-
 
 class Login(Resource):
     def post(self):
@@ -78,47 +117,60 @@ class Login(Resource):
         if user:
             user.authenticate(password)
             session['user_id'] = user.id
-            return user.to_dict(), 200
+            result = user_schema.dump(user)
+            return result, 200
 
         return {'error': 'Invalid username or password'}, 401
 
-
 class Logout(Resource):
     def delete(self):
-        session['user_id'] = None
+        session.pop('user_id', None)
         return {}, 204
-
 
 class AddImage(Resource):
     def post(self):
         data = request.get_json()
-        image = Image(**data)
+
+        image_data = {
+            'url': data.get('url'),
+            'price': data.get('price'),
+            'likes': data.get('likes'),
+            'user_id': data.get('user_id')
+        }
+        image = Image(**image_data)
+
+        category_data = {
+            'name': data.get('category')
+        }
+        category = Category(**category_data)
+
+        image.categories.append(category)
 
         db.session.add(image)
         db.session.commit()
 
-        return image.url, 201
-
+        result = image_schema.dump(image)
+        return result, 201
 
 class EditImg(Resource):
     def patch(self, id):
-        image = Image.query.filter_by(id=id).first()
+        image = Image.query.get(id)
 
         for key, value in request.json.items():
             setattr(image, key, value)
 
         db.session.commit()
 
-        return image.to_dict(), 200
+        result = image_schema.dump(image)
+        return result, 200
 
     def delete(self, id):
-        image = Image.query.filter_by(id=id).first()
+        image = Image.query.get(id)
 
         db.session.delete(image)
         db.session.commit()
 
         return {"Deleted": True}, 204
-
 
 class CommentResource(Resource):
     def post(self):
@@ -136,18 +188,17 @@ class CommentResource(Resource):
 
         return {'added': True}, 201
 
-
 class CommentsUD(Resource):
     def delete(self, id):
-        com = Comment.query.filter_by(id=id).first()
+        com = Comment.query.get(id)
 
         db.session.delete(com)
         db.session.commit()
 
         return {'delete': True}, 200
 
-
 api.add_resource(ImagesResource, '/images')
+api.add_resource(ImageResource, '/images/<int:image_id>')
 api.add_resource(Signup, '/signup')
 api.add_resource(Login, '/login')
 api.add_resource(CheckSession, '/check_session')
@@ -156,6 +207,8 @@ api.add_resource(AddImage, '/add_image')
 api.add_resource(EditImg, '/edit_image/<int:id>')
 api.add_resource(CommentResource, '/comment')
 api.add_resource(CommentsUD, '/comment_edit/<int:id>')
+api.add_resource(CategoriesResource, '/categories')
+
 
 if __name__ == '__main__':
     app.run(debug=True, port=5555)
